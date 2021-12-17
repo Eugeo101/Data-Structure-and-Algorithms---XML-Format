@@ -1,3 +1,6 @@
+from XML_tree import *
+
+
 class XML:
     file_name = ""
     file_data = ""
@@ -16,7 +19,7 @@ class XML:
                 self.validate()
 
     def validate(self):
-        return
+        self.isValid = True
 
     def validate_encoded(self):
         file_data = self.file_data
@@ -77,7 +80,7 @@ class XML:
                     body += '<'
                 last_char = '<'
 
-        encoded_file_name = self.file_name[0:-3] + "min.xml"
+        encoded_file_name = self.file_name[0:-3] + "exml"
         f = open(encoded_file_name, "w")
         f.write(head + body)
         f.close()
@@ -115,7 +118,7 @@ class XML:
                 else:
                     element += file_data[i]
 
-        decoded_file_name = self.file_name[0:-7] + "xml"
+        decoded_file_name = self.file_name[0:-4] + "xml"
         f = open(decoded_file_name, "w")
         f.write(self.prettify_data(decoded))
         f.close()
@@ -151,8 +154,7 @@ class XML:
                     temp2 += text[k]
                     k += 1
                 elements.append(temp2)
-                if elements[-1] == " " or elements[-1] == '' or elements[
-                    -1] == '  ':  # make sure we didn't get empty spaces as elements
+                if elements[-1] == " " or elements[-1] == '' or elements[-1] == '  ':  # make sure we didn't get empty spaces as elements
                     elements.pop()
         self.elements = elements
 
@@ -180,6 +182,71 @@ class XML:
             indentation = ' ' * 4 * powers[i]
             new_text += indentation + elements[i] + '\n'
         return new_text
+
+    def to_json(self):
+        root = Node.create_xml_tree(self.elements)
+        json = "{"
+        file_name = self.file_name
+        json += self.node_to_json(root)
+        json += "\n}"
+        file = open(file_name[0:-3] + "json", "w")
+        file.write(json)
+
+    @staticmethod
+    def int_or_str(data=""):
+        if data.isdigit():
+            return int(data)
+        return '"{}"'.format(data)
+
+    @staticmethod
+    def array_check(node):
+        return node.parent and len(node.parent.children) > 1 and node.parent.children[0].data == node.parent.children[
+            1].data
+
+
+    @staticmethod
+    def node_to_json(node):
+        lvl = node.get_depth() + 1
+        node_level = node
+        while node_level.parent:
+            if node_level.parent and XML.array_check(node_level.parent):
+                lvl += 1
+            node_level = node_level.parent
+        if XML.array_check(node):
+            result = '\n{}"{}": ['.format("\t" * lvl, node.data[1:-1])
+            siblings = node.parent.children
+            for i in range(len(siblings)):
+                sibling_children = siblings[i].children
+                if node.children[0].data[0] != '<':
+                    coma = "," if i < len(siblings) - 1 else ""
+                    result += '\n{}{}{}'.format("\t" * (lvl + 1), XML.int_or_str(siblings[i].children[0].data), coma)
+                else:
+                    result += "\n{}{{".format("\t" * (lvl + 1))
+                    for j in range(len(sibling_children)):
+                        result += XML.node_to_json(sibling_children[j])
+                        coma = "," if j < len(sibling_children) - 1 else ""
+                        result += coma
+                    result += "\n{}}}".format("\t" * (lvl + 1))
+                    coma = "," if i < len(siblings) - 1 else ""
+                    result += coma
+            result += '\n{}]'.format("\t" * lvl)
+            return result
+        else:
+            if node.children[0].data[0] != '<':
+                leaf = node.children[0].data
+                result = '\n{}"{}": {}'.format("\t" * lvl, node.data[1:-1], XML.int_or_str(leaf))
+            else:
+                result = '\n{}"{}": {{'.format("\t" * lvl, node.data[1:-1])
+                if len(node.children) > 1 and node.children[0].data == node.children[1].data:
+                    result += XML.node_to_json(node.children[0])
+                    result += '\n{}}}'.format("\t" * lvl)
+                else:
+                    for i in range(len(node.children)):
+                        coma = "," if i < len(node.children) - 1 else ""
+                        result += XML.node_to_json(node.children[i])
+                        result += coma
+                    result += '\n{}}}'.format("\t" * lvl)
+            return result
 
     @staticmethod
     def trim_spaces(text):
