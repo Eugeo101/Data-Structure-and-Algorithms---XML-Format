@@ -101,7 +101,7 @@ class StartPage(tk.Frame):
                     Lorem ipsum dolor sit amet
                 </body>
                 """
-        print(s)
+        # print(s)
         frame2 = tk.Frame(main_frame, bg="#F0F0F0")
         frame2.place(relx=0.35, rely=0.3, relwidth=0.3 ,relheight=0.5)
         self.frame2 = frame2
@@ -144,7 +144,7 @@ class StartPage(tk.Frame):
         if len(filename) != 0:
             self.path = filename
 
-        print(filename)
+        # print(filename)
         if self.path != "":
             path_widget = tk.Label(self.frame1, text=self.path)
             path_widget.place(relx=0.6, rely=0.90)
@@ -190,10 +190,13 @@ class Page1(tk.Frame):
         code_frame = tk.Frame(main_frame, bg="#F0F0F0")
         code_frame.place(relx= 0.05, rely=0.05, relwidth=0.4, relheight=0.5)
         self.code_frame = code_frame
+
         #right frame
         result_frame = tk.Frame(main_frame, bg="#F0F0F0")
         result_frame.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.5)
         self.result_frame = result_frame
+        self.result_second_frame = self.result_frame
+
         consestancey = tk.Button(main_frame, text="Consestancey", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.consestancy, activebackground='#9BBDF9')
         consestancey.place(relx=0.08, rely=0.6, relwidth=0.15)
 
@@ -205,7 +208,8 @@ class Page1(tk.Frame):
         convert.place(relx=0.54, rely=0.6, relwidth=0.15)
         self.convert_btn = convert
 
-        codec = tk.Button(self.main_frame, text=self.codec, state="disabled", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec, activebackground='#9BBDF9')
+        self.codec = ""
+        codec = tk.Button(self.main_frame, text=self.codec, state="disabled", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec_func, activebackground='#9BBDF9')
         codec.place(relx=0.77, rely=0.6, relwidth=0.15)
         self.codec_btn = codec
 
@@ -222,6 +226,11 @@ class Page1(tk.Frame):
         convert_text = tk.Label(main_frame, text="Convert X/J", fg="black", bg="#9BBDF9", font=("Times", 15))
         convert_text.place(relx=0.05, rely=0.8, relheight=0.04)
 
+        self.consestancey_text = consestancey_text
+        self.formating_text = formating_text
+        self.convert_text = convert_text
+        self.codec_text = ""
+
         #Save/Cancel
         self.txt = ""
         save = tk.Button(main_frame, text="Save", font=(("Times", 13, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.save, activebackground='#9BBDF9')
@@ -237,31 +246,55 @@ class Page1(tk.Frame):
         # read lines from you code
         f = open(text, 'r')
         s = f.read()
+        # print(s)
         if '<' in s:
             self.isXml = True
         s = s.split('\n')
+
+
+        # ===================================================CODE FRAME=========================#
+        # Canvas while mainFrame is code_frame given to canvas
+        my_canvas = tk.Canvas(self.code_frame)
+        my_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        # ScrolBar
+        my_scrollbar = tk.Scrollbar(self.code_frame, orient='vertical', command=my_canvas.yview)
+        my_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # horizontal
+        my_scrollbar2 = tk.Scrollbar(self.code_frame, orient=tk.HORIZONTAL, command=my_canvas.xview)
+        my_scrollbar2.pack(side=tk.BOTTOM, fill='x')
+
+        my_canvas.config(xscrollcommand=my_scrollbar2.set, yscrollcommand=my_scrollbar.set)
+        my_canvas.bind('<Configure>', lambda e: my_canvas.config(scrollregion=my_canvas.bbox("all")))  # bounded box for canvas
+
+        code_second_frame = tk.Frame(my_canvas)
+        my_canvas.create_window((0, 0), window=code_second_frame, anchor="nw")  # bounded box start at 0,0
+        self.code_second_frame = code_second_frame
+
         for string in s:
-            text_widget = tk.Label(self.code_frame, text=string, fg="black")
+            text_widget = tk.Label(self.code_second_frame, text=string, fg="black")
             text_widget.pack(side="top", anchor="nw")
 
         if (self.isXml):
             #destroy prevoiuse button
             self.codec_btn.destroy()
             self.codec = "Encoding"
-            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec, activebackground='#9BBDF9')
+            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec_func, activebackground='#9BBDF9')
             codec.place(relx=0.77, rely=0.6, relwidth=0.15)
             codec_text = tk.Label(self.main_frame, text=self.codec, fg="black", bg="#9BBDF9", font=("Times", 15))
             codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
+            self.codec_text = codec_text
             self.codec_btn = codec
         else:
             # destroy prevoiuse button
             self.codec_btn.destroy()
             self.codec = "Decoding"
-            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec, activebackground='#9BBDF9')
+            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec_func, activebackground='#9BBDF9')
             codec.place(relx=0.77, rely=0.6, relwidth=0.15)
             self.codec_btn = codec
             codec_text = tk.Label(self.main_frame, text=self.codec, fg="black", bg="#9BBDF9", font=("Times", 15))
             codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
+            self.codec_text = codec_text
 
     def save(self):
         if (self.txt == ""):
@@ -280,13 +313,18 @@ class Page1(tk.Frame):
             flag = True
             text = ["Error at line 39", "Error at line 89"]
             self.txt = text
+
             for string in text:
-                text_widget = tk.Label(self.result_frame, text=string+'\n', fg="red")
+                text_widget = tk.Label(self.result_second_frame, text=string+'\n', fg="red")
                 text_widget.pack(side="top", anchor="nw")
             if flag ==True:
                 self.formating_btn.destroy()
                 formating = tk.Button(self.main_frame, text="Formating", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.formating, activebackground='#9BBDF9')
                 formating.place(relx=0.31, rely=0.6, relwidth=0.15)
+                #green
+                self.consestancey_text.destroy()
+                consestancey_text = tk.Label(self.main_frame, text="Consestancey", fg="green", bg="#9BBDF9", font=("Times", 15))
+                consestancey_text.place(relx=0.05, rely=0.7, relheight=0.04)
             self.isPressed_1 = True
 
     def formating(self):
@@ -296,37 +334,124 @@ class Page1(tk.Frame):
             #meta data
             flag = True
             text = """<?xml version="1.0" encoding="UTF-8"?>
-    <products title = "node_1">
-        <product>
-            <name>Ahmed</name>
-            <id>1806171</id>
-            <sleep>No</sleep>
-        </product>
-        
-        <product>
-            <name>Ahmed</name>
-            <id>1806171</id>
-            <sleep>No</sleep>
-        </product>
-    
-        <product>
-            <name>Ahmed</name>
-            <id>1806171</id>
-            <sleep>No</sleep>
-        </product>
-    </products>"""
+<users>
+    <user>
+        <id>1</id>
+        <name>Ahmed Ali</name>
+        <posts>
+            <post>
+                <body>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </body>
+                <topics>
+                    <topic>
+                        economy
+                    </topic>
+                    <topic>
+                        finance
+                    </topic>
+                </topics>
+            </post>
+            <post>
+                <body>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </body>
+                <topics>
+                    <topic>
+                        solar_energy
+                    </topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2</id>
+            </follower>
+            <follower>
+                <id>3</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2</id>
+        <name>Yasser Ahmed</name>
+        <posts>
+            <post>
+                <body>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </body>
+                <topics>
+                    <topic>
+                        education
+                    </topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>1</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>3</id>
+        <name>Mohamed Sherif</name>
+        <posts>
+            <post>
+                <body>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </body>
+                <topics>
+                    <topic>
+                        sports
+                    </topic>
+                </topics>
+            </post>
+        </posts>
+        <followers>
+            <follower>
+                <id>1</id>
+            </follower>
+        </followers>
+    </user>
+</users>"""
             self.txt = text
             text = text.split('\n')
             #destroy what inside result_frame
-            for widget in self.result_frame.winfo_children():
+            for widget in self.result_second_frame.winfo_children():
                 widget.destroy()
+
+            # ===================================================RESULT FRAME=========================#
+            # Canvas while mainFrame is result_frame given to canvas
+            my_canvasR2 = tk.Canvas(self.result_frame)
+            my_canvasR2.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+            # Scrol Bar
+            my_scrollbarR = tk.Scrollbar(self.result_frame, orient='vertical', command=my_canvasR2.yview)
+            my_scrollbarR.pack(side=tk.RIGHT, fill=tk.Y)
+
+            # horizontal
+            my_scrollbar2R = tk.Scrollbar(self.result_frame, orient=tk.HORIZONTAL, command=my_canvasR2.xview)
+            my_scrollbar2R.pack(side=tk.BOTTOM, fill=tk.X)
+
+            my_canvasR2.config(xscrollcommand=my_scrollbar2R.set, yscrollcommand=my_scrollbarR.set)
+            my_canvasR2.bind('<Configure>', lambda e: my_canvasR2.config(
+                scrollregion=my_canvasR2.bbox("all")))  # bounded box for canvas
+
+            result_second_frame = tk.Frame(my_canvasR2)
+            my_canvasR2.create_window((0, 0), window=result_second_frame, anchor="nw")  # bounded box start at 0,0
+            self.result_second_frame = result_second_frame
+
             for string in text:
-                text_widget = tk.Label(self.result_frame, text=string+'\n', fg="black")
+                text_widget = tk.Label(self.result_second_frame, text=string, fg="black")
                 text_widget.pack(side="top", anchor="nw")
             if flag ==True:
                 self.convert_btn.destroy()
                 convert = tk.Button(self.main_frame, text="Convert X/J", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.convert, activebackground='#9BBDF9')
                 convert.place(relx=0.54, rely=0.6, relwidth=0.15)
+                #green
+                self.formating_text.destroy()
+                formating_text = tk.Label(self.main_frame, text="Formating", fg="green", bg="#9BBDF9", font=("Times", 15))
+                formating_text.place(relx=0.05, rely=0.75, relheight=0.04)
             self.isPressed_2 = True
 
     def convert(self):
@@ -336,80 +461,122 @@ class Page1(tk.Frame):
             # meta data
             flag = True
             text = """{
-      "products": {
-        "product": [
-          {
-            "name": "Ahmed",
-            "id": 1806171,
-            "sleep": "No"
-          },
-          {
-            "name": "Ahmed",
-            "id": 1806171,
-            "sleep": "No"
-          },
-          {
-            "name": "Ahmed",
-            "id": 1806171,
-            "sleep": "No"
+  "users": {
+    "user": [
+      {
+        "id": 1,
+        "name": "Ahmed Ali",
+        "posts": {
+          "post": [
+            {
+              "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+              "topics": {
+                "topic": [
+                  "economy",
+                  "finance"
+                ]
+              }
+            },
+            {
+              "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+              "topics": {
+                "topic": "solar_energy"
+              }
+            }
+          ]
+        },
+        "followers": {
+          "follower": [
+            {
+              "id": 2
+            },
+            {
+              "id": 3
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "name": "Yasser Ahmed",
+        "posts": {
+          "post": {
+            "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+            "topics": {
+              "topic": "education"
+            }
           }
-        ]
+        },
+        "followers": {
+          "follower": {
+            "id": 1
+          }
+        }
+      },
+      {
+        "id": 3,
+        "name": "Mohamed Sherif",
+        "posts": {
+          "post": {
+            "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+            "topics": {
+              "topic": "sports"
+            }
+          }
+        },
+        "followers": {
+          "follower": {
+            "id": 1
+          }
+        }
       }
-    }"""
+    ]
+  }
+}"""
             self.txt = text
             text = text.split('\n')
             # destroy what inside result_frame
-            for widget in self.result_frame.winfo_children():
+            for widget in self.result_second_frame.winfo_children():
                 widget.destroy()
+
             for string in text:
-                text_widget = tk.Label(self.result_frame, text=string + '\n', fg="black")
+                text_widget = tk.Label(self.result_second_frame, text=string, fg="black")
                 text_widget.pack(side="top", anchor="nw")
             if flag == True:
                 self.codec_btn.destroy()
-                codec = tk.Button(self.main_frame, text=self.codec, font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec, activebackground='#9BBDF9')
+                codec = tk.Button(self.main_frame, text=self.codec, font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec_func, activebackground='#9BBDF9')
                 codec.place(relx=0.77, rely=0.6, relwidth=0.15)
+                self.convert_text.destroy()
+                convert_text = tk.Label(self.main_frame, text="Convert X/J", fg="green", bg="#9BBDF9", font=("Times", 15))
+                convert_text.place(relx=0.05, rely=0.8, relheight=0.04)
             self.isPressed_3 = True
 
-    def codec(self):
+    def codec_func(self):
         if self.isPressed_4 != True:
             # call you function
 
             # meta data
             flag = True
-            text = """{
-              "products": {
-                "product": [
-                  {
-                    "name": "Ahmed",
-                    "id": 1806171,
-                    "sleep": "No"
-                  },
-                  {
-                    "name": "Ahmed",
-                    "id": 1806171,
-                    "sleep": "No"
-                  },
-                  {
-                    "name": "Ahmed",
-                    "id": 1806171,
-                    "sleep": "No"
-                  }
-                ]
-              }
-            }"""
+            text = """Encoded File
+            
+            24t8l"""
             self.txt = text
             text = text.split('\n')
             # destroy what inside result_frame
-            for widget in self.result_frame.winfo_children():
+            for widget in self.result_second_frame.winfo_children():
                 widget.destroy()
+
             for string in text:
-                text_widget = tk.Label(self.result_frame, text=string + '\n', fg="black")
+                text_widget = tk.Label(self.result_second_frame, text=string, fg="black")
                 text_widget.pack(side="top", anchor="nw")
+            if flag == True:
+                self.convert_text.destroy()
+                codec_text = tk.Label(self.main_frame, text=self.codec, fg="green", bg="#9BBDF9", font=("Times", 15))
+                codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
             self.isPressed_4 = True
 
 
 # Driver Code
-
 app = tkinterApp() #equivilent to => root = tk.Tk()
 
 #width and height of your labtop
@@ -429,9 +596,6 @@ font_header = tkFont.Font(family="Times", size=25)
 font_body = tkFont.Font(family="Times", size=15)
 font_footer = tkFont.Font(family="Times", size=15)
 
-
-
-
 # canvas = tk.Canvas(app, height=h, width=w, bg="#9BBDF9")
 # canvas.pack()
 
@@ -447,8 +611,5 @@ font_footer = tkFont.Font(family="Times", size=15)
 
 label02 = tk.Label(app, text="Made By The Parsers", bg="black", fg="white", font=("Times", 15))
 label02.place(relx=0.44, rely=0.92)
-
-
-
 
 app.mainloop()
