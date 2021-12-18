@@ -13,7 +13,7 @@ class XML:
             self.file_name = file_name
             file = open(file_name, "r").read()
             self.file_data = self.trim_spaces(file)
-            if file_name[-8:] == ".min.xml":
+            if file_name[-4:] == ".enc":
                 self.validate_encoded()
             elif file_name[-4:] == ".xml":
                 self.validate()
@@ -80,10 +80,7 @@ class XML:
                     body += '<'
                 last_char = '<'
 
-        encoded_file_name = self.file_name[0:-3] + "exml"
-        f = open(encoded_file_name, "w")
-        f.write(head + body)
-        f.close()
+        return head + body
 
     def decode(self):
         if not self.isValid:
@@ -118,10 +115,7 @@ class XML:
                 else:
                     element += file_data[i]
 
-        decoded_file_name = self.file_name[0:-4] + "xml"
-        f = open(decoded_file_name, "w")
-        f.write(self.prettify_data(decoded))
-        f.close()
+        return self.prettify_data(decoded)
 
     def scrape_data(self):
         text = self.file_data
@@ -158,6 +152,15 @@ class XML:
                     elements.pop()
         self.elements = elements
 
+    def get_tags(self):
+        if len(self.elements) == 0:
+            self.scrape_data()
+        result = []
+        for element in self.elements:
+            if element[0] == "<" and element[1] != "/" and element not in result:
+                result.append(element)
+        return result.reverse()
+
     def prettify_data(self):
         '''
         Takes the list of tages that was outputted by scrape_data(), reorganizes it, then displays it in a proper order
@@ -189,8 +192,7 @@ class XML:
         file_name = self.file_name
         json += self.node_to_json(root)
         json += "\n}"
-        file = open(file_name[0:-3] + "json", "w")
-        file.write(json)
+        return json
 
     @staticmethod
     def int_or_str(data=""):
@@ -202,7 +204,6 @@ class XML:
     def array_check(node):
         return node.parent and len(node.parent.children) > 1 and node.parent.children[0].data == node.parent.children[
             1].data
-
 
     @staticmethod
     def node_to_json(node):
