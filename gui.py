@@ -7,7 +7,6 @@ import tkinter.font as tkFont
 def delete_widget(widget):
     widget.destroy()
 
-apps = []
 class tkinterApp(tk.Tk):
 
     # __init__ function for class tkinterApp
@@ -15,12 +14,10 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         # as it ihirit from tk.TK
         tk.Tk.__init__(self, *args, **kwargs)
-
-        # creating a container
         #default tkinter app layout
         container = tk.Frame(self)
+        # Initialize Window
         container.pack(side="top", fill="both", expand=True)
-
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
@@ -33,7 +30,7 @@ class tkinterApp(tk.Tk):
             frame = F(container, self)
 
             # initializing frame of that object from
-            # startpage, page1, page2 respectively with
+            # startpage, page1 respectively with
             # for loop
             self.frames[F] = frame
 
@@ -46,8 +43,18 @@ class tkinterApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise() # to show on the top StartPage!
+        return True
 
+    # passes text to the window StartPage
+    # def pass_on_text(self, text):
+    #     self.frames[StartPage].get_text(text)
 
+    # passes text to the window Page1
+    def pass_on_text2(self, text):
+        self.frames[Page1].get_text(text)
+
+    def destory_app(self):
+        self.destroy()
 
 
 # first window frame startpage
@@ -110,24 +117,28 @@ class StartPage(tk.Frame):
 
        #path_widget
         if self.path != "":
-            apps.insert(0, self.path)
             path_widget = tk.Label(frame1, text=self.path)
             path_widget.place( relx=0.62, rely=0.90)
         # next button
         next_btn = tk.Button(frame1, text="next", padx=5, pady=2.5, fg="white", bg="black", command=self.go_next, activebackground='#9BBDF9')
         next_btn.place(relx=0.9, rely=0.95)
 
+    # send text to Page1
+    def send_text(self, text):
+        self.controller.pass_on_text2(text)
+
+    # # get information and change the displayed text
+    # def get_text(self, text):
+    #     self.label.config(text=text)
+
     def addApp(self):
         for widget in self.frame1.winfo_children():
             if str(widget) == "path_widget":
                 widget.destroy
         filename = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(
-        ("XML File", "*.xml"), ("Encoded Text File", "*.text"),("select all", "*.*"))
+        ("XML File", "*.xml"), ("Encoded Text File", "*.txt"),("select all", "*.*"))
         )  # navigate from here "/" and type is xml or txt or anyfile
-        f = open(filename, 'r')
-        for e in f:
-            apps.append(e)
-            print(e)
+        self.send_text(filename)
 
         # remove empty spaces
         if len(filename) != 0:
@@ -140,6 +151,7 @@ class StartPage(tk.Frame):
 
     def go_next(self):
         if (self.path != ""):
+            # send_text(self.path)
             self.controller.show_frame(Page1)
         else:
             path_widget = tk.Label(self.frame1, text="Please Chose File First", fg="red")
@@ -147,7 +159,6 @@ class StartPage(tk.Frame):
 
     def print_right_text(self, text):
         s = text.split('\n')
-        # button1.pack(side=tkinter.LEFT)
         flag = True
         for string in s:
             if flag == True:
@@ -155,54 +166,246 @@ class StartPage(tk.Frame):
                 continue
             text_widget = tk.Label(self.frame2, text=string, fg="black")
             text_widget.pack(side="top", anchor="nw")
-
-    @staticmethod
-    def paths_returner(self):
-        return self.paths
-    @staticmethod
-    def path_returner(self):
-        return self.path
 #Screen 2
 class Page1(tk.Frame):
 
     def __init__(self, parent, controller):
-
         tk.Frame.__init__(self, parent)
         #instance of Start page share same static method
-        # s = StartPage(parent, controller).paths_returner()
-        # self.path = '/'
         self.isXml = False
-        print("175")
+        self.controller = controller
+        self.isPressed_1 = False
+        self.isPressed_2 = False
+        self.isPressed_3 = False
+        self.isPressed_4 = False
+
         main_frame = tk.Frame(self, bg="#9BBDF9")
         main_frame.place(relwidth=1, relheight=1, relx=0, rely=0)
+        self.main_frame = main_frame
         #screen 1 text
         screen1 = tk.Label(main_frame, text="Screen 1", fg="black", bg="#9BBDF9", font=("Times", 15))
         screen1.place(relx=0.48, rely=0.025)
 
         #left frame
-        code_frame = tk.Frame(main_frame, bg="white")
+        code_frame = tk.Frame(main_frame, bg="#F0F0F0")
         code_frame.place(relx= 0.05, rely=0.05, relwidth=0.4, relheight=0.5)
+        self.code_frame = code_frame
         #right frame
-        result_frame = tk.Frame(main_frame, bg="white")
+        result_frame = tk.Frame(main_frame, bg="#F0F0F0")
         result_frame.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.5)
-        #read lines from you code
+        self.result_frame = result_frame
+        consestancey = tk.Button(main_frame, text="Consestancey", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.consestancy, activebackground='#9BBDF9')
+        consestancey.place(relx=0.08, rely=0.6, relwidth=0.15)
 
-        # f = open(str(self.path), 'r')
-        # lines = f.read()
-        # print(lines)
+        formating = tk.Button(main_frame, text="Formating", state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.formating, activebackground='#9BBDF9')
+        formating.place(relx=0.31, rely=0.6, relwidth=0.15)
+        self.formating_btn = formating
 
-        # #xml file
-        if "<" in apps:
+        convert = tk.Button(main_frame, text="Convert X/J", state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.convert, activebackground='#9BBDF9')
+        convert.place(relx=0.54, rely=0.6, relwidth=0.15)
+        self.convert_btn = convert
+
+        codec = tk.Button(self.main_frame, text=self.codec, state="disabled", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec, activebackground='#9BBDF9')
+        codec.place(relx=0.77, rely=0.6, relwidth=0.15)
+        self.codec_btn = codec
+
+        #TEXTS
+        list_text = tk.Label(main_frame, text="List", fg="black", bg="#9BBDF9", font=("Times", 15))
+        list_text.place(relx=0.05, rely=0.66, relheight=0.04)
+
+        consestancey_text = tk.Label(main_frame, text="Consestancey", fg="black", bg="#9BBDF9", font=("Times", 15))
+        consestancey_text.place(relx=0.05, rely=0.7, relheight=0.04)
+
+        formating_text = tk.Label(main_frame, text="Formating", fg="black", bg="#9BBDF9", font=("Times", 15))
+        formating_text.place(relx=0.05, rely=0.75, relheight=0.04)
+
+        convert_text = tk.Label(main_frame, text="Convert X/J", fg="black", bg="#9BBDF9", font=("Times", 15))
+        convert_text.place(relx=0.05, rely=0.8, relheight=0.04)
+
+        #Save/Cancel
+        self.txt = ""
+        save = tk.Button(main_frame, text="Save", font=(("Times", 13, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.save, activebackground='#9BBDF9')
+        save.place(relx=0.88, rely=0.85, relwidth=0.07, relheight=0.05)
+
+        cancel = tk.Button(main_frame, text="Cancel", font=(("Times", 13, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.controller.destory_app,activebackground='#9BBDF9')
+        cancel.place(relx=0.78, rely=0.85, relwidth=0.07, relheight=0.05)
+
+    # get information and change the displayed text
+    def get_text(self, text):
+        for label in self.code_frame.winfo_children():
+            label.destroy()
+        # read lines from you code
+        f = open(text, 'r')
+        s = f.read()
+        if '<' in s:
             self.isXml = True
-            print("197")
-            for text in apps:
-                code_left = tk.Label(code_frame, text)
-        #encoded file
+        s = s.split('\n')
+        for string in s:
+            text_widget = tk.Label(self.code_frame, text=string, fg="black")
+            text_widget.pack(side="top", anchor="nw")
+
+        if (self.isXml):
+            #destroy prevoiuse button
+            self.codec_btn.destroy()
+            self.codec = "Encoding"
+            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec, activebackground='#9BBDF9')
+            codec.place(relx=0.77, rely=0.6, relwidth=0.15)
+            codec_text = tk.Label(self.main_frame, text=self.codec, fg="black", bg="#9BBDF9", font=("Times", 15))
+            codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
+            self.codec_btn = codec
         else:
-            self.isXml = False
-            print("203")
-            for text in apps:
-                code_left = tk.Label(code_frame, text)
+            # destroy prevoiuse button
+            self.codec_btn.destroy()
+            self.codec = "Decoding"
+            codec = tk.Button(self.main_frame, text=self.codec, state="disabled",font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command= self.codec, activebackground='#9BBDF9')
+            codec.place(relx=0.77, rely=0.6, relwidth=0.15)
+            self.codec_btn = codec
+            codec_text = tk.Label(self.main_frame, text=self.codec, fg="black", bg="#9BBDF9", font=("Times", 15))
+            codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
+
+    def save(self):
+        if (self.txt == ""):
+            ff = open("1806171.txt", 'w')
+            ff.write("You Didn''t press any button please reopen application and go with the full sequnce")
+        else:
+            ff = open("1806171.txt", 'w')
+            ff.write(self.txt)
+        self.controller.destory_app()
+
+    def consestancy(self):
+        if self.isPressed_1 != True:
+            #call you function
+
+            #meta data
+            flag = True
+            text = ["Error at line 39", "Error at line 89"]
+            self.txt = text
+            for string in text:
+                text_widget = tk.Label(self.result_frame, text=string+'\n', fg="red")
+                text_widget.pack(side="top", anchor="nw")
+            if flag ==True:
+                self.formating_btn.destroy()
+                formating = tk.Button(self.main_frame, text="Formating", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.formating, activebackground='#9BBDF9')
+                formating.place(relx=0.31, rely=0.6, relwidth=0.15)
+            self.isPressed_1 = True
+
+    def formating(self):
+        if self.isPressed_2 != True:
+            #call you function
+
+            #meta data
+            flag = True
+            text = """<?xml version="1.0" encoding="UTF-8"?>
+    <products title = "node_1">
+        <product>
+            <name>Ahmed</name>
+            <id>1806171</id>
+            <sleep>No</sleep>
+        </product>
+        
+        <product>
+            <name>Ahmed</name>
+            <id>1806171</id>
+            <sleep>No</sleep>
+        </product>
+    
+        <product>
+            <name>Ahmed</name>
+            <id>1806171</id>
+            <sleep>No</sleep>
+        </product>
+    </products>"""
+            self.txt = text
+            text = text.split('\n')
+            #destroy what inside result_frame
+            for widget in self.result_frame.winfo_children():
+                widget.destroy()
+            for string in text:
+                text_widget = tk.Label(self.result_frame, text=string+'\n', fg="black")
+                text_widget.pack(side="top", anchor="nw")
+            if flag ==True:
+                self.convert_btn.destroy()
+                convert = tk.Button(self.main_frame, text="Convert X/J", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.convert, activebackground='#9BBDF9')
+                convert.place(relx=0.54, rely=0.6, relwidth=0.15)
+            self.isPressed_2 = True
+
+    def convert(self):
+        if self.isPressed_3 != True:
+            # call you function
+
+            # meta data
+            flag = True
+            text = """{
+      "products": {
+        "product": [
+          {
+            "name": "Ahmed",
+            "id": 1806171,
+            "sleep": "No"
+          },
+          {
+            "name": "Ahmed",
+            "id": 1806171,
+            "sleep": "No"
+          },
+          {
+            "name": "Ahmed",
+            "id": 1806171,
+            "sleep": "No"
+          }
+        ]
+      }
+    }"""
+            self.txt = text
+            text = text.split('\n')
+            # destroy what inside result_frame
+            for widget in self.result_frame.winfo_children():
+                widget.destroy()
+            for string in text:
+                text_widget = tk.Label(self.result_frame, text=string + '\n', fg="black")
+                text_widget.pack(side="top", anchor="nw")
+            if flag == True:
+                self.codec_btn.destroy()
+                codec = tk.Button(self.main_frame, text=self.codec, font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.codec, activebackground='#9BBDF9')
+                codec.place(relx=0.77, rely=0.6, relwidth=0.15)
+            self.isPressed_3 = True
+
+    def codec(self):
+        if self.isPressed_4 != True:
+            # call you function
+
+            # meta data
+            flag = True
+            text = """{
+              "products": {
+                "product": [
+                  {
+                    "name": "Ahmed",
+                    "id": 1806171,
+                    "sleep": "No"
+                  },
+                  {
+                    "name": "Ahmed",
+                    "id": 1806171,
+                    "sleep": "No"
+                  },
+                  {
+                    "name": "Ahmed",
+                    "id": 1806171,
+                    "sleep": "No"
+                  }
+                ]
+              }
+            }"""
+            self.txt = text
+            text = text.split('\n')
+            # destroy what inside result_frame
+            for widget in self.result_frame.winfo_children():
+                widget.destroy()
+            for string in text:
+                text_widget = tk.Label(self.result_frame, text=string + '\n', fg="black")
+                text_widget.pack(side="top", anchor="nw")
+            self.isPressed_4 = True
 
 
 # Driver Code
