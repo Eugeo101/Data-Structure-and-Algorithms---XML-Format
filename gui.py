@@ -1,159 +1,251 @@
-import os,sys
-from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QGridLayout, QLayout, QLineEdit,QTextEdit,QMenu,QSystemTrayIcon,QFormLayout
-from PyQt5.QtWidgets import QLabel,QPushButton,QFileDialog,QSlider,QProgressBar,QMessageBox,QCheckBox
-from PyQt5.QtWidgets import QWidget,QHBoxLayout,QVBoxLayout,QMainWindow
-from PyQt5.QtGui import QIcon,QPixmap,QImage
-from PyQt5.QtCore import QSize, QTimer,Qt
-from consistency_xml import consistency_check
-class Second_Win(QWidget):
-    def __init__(self,path=None):
-        super().__init__()
-        self.path = path
-        self.validate_message = ""
-        self.setWindowTitle("Functions")
-        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
-        self.setFixedSize(600, 400)
-        self.btn1 = QPushButton("Validate")
-        self.btn2 = QPushButton("Fix Error")
-        self.btn3 = QPushButton("Format XML")
-        self.btn4 = QPushButton("Covert to JSON")
-        self.btn5 = QPushButton("Compress")
-        self.btn6 = QPushButton("Decompress")
+import tkinter as tk
+from tkinter import filedialog, Text
+import os
+from PIL import ImageTk, Image
+import tkinter.font as tkFont
 
-        self.btn1.clicked.connect(self.validate)
-        self.btn2.clicked.connect(self.fix_error)
-        self.btn3.clicked.connect(self.format)
-        self.btn4.clicked.connect(self.to_json)
-        self.btn5.clicked.connect(self.compress)
-        self.btn6.clicked.connect(self.decompress)
+def delete_widget(widget):
+    widget.destroy()
 
-        self.ppar1 = QProgressBar()
-        self.ppar2 = QProgressBar()
-        self.ppar3 = QProgressBar()
-        self.ppar4 = QProgressBar()
-        self.ppar5 = QProgressBar()
-        self.ppar6 = QProgressBar()
+apps = []
+class tkinterApp(tk.Tk):
 
+    # __init__ function for class tkinterApp
+    def __init__(self, *args, **kwargs):
+        # __init__ function for class Tk
+        # as it ihirit from tk.TK
+        tk.Tk.__init__(self, *args, **kwargs)
 
+        # creating a container
+        #default tkinter app layout
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
 
-        self.btn1.setParent(self)
-        self.btn2.setParent(self)
-        self.btn3.setParent(self)
-        self.btn4.setParent(self)
-        self.btn5.setParent(self)
-        self.btn6.setParent(self)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
 
+        # initializing frames to an empty array
+        self.frames = {}
 
+        # iterating through a tuple consisting
+        # of the different page layouts
+        for F in (StartPage, Page1):
+            frame = F(container, self)
 
+            # initializing frame of that object from
+            # startpage, page1, page2 respectively with
+            # for loop
+            self.frames[F] = frame
 
-        self.btn1.move(100,50)
-        self.btn2.move(100,100)
-        self.btn3.move(100,150)
-        self.btn4.move(100,200)
-        self.btn5.move(100,250)
-        self.btn6.move(100,300)
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.show_frame(StartPage) #show start page
+
+    # to display the current frame passed as
+    # parameter
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise() # to show on the top StartPage!
 
 
-        self.ppar1.setParent(self)
-        self.ppar2.setParent(self)
-        self.ppar3.setParent(self)
-        self.ppar4.setParent(self)
-        self.ppar5.setParent(self)
-        self.ppar6.setParent(self)
-
-        self.ppar1.move(300,50)
-        self.ppar2.move(300,100)
-        self.ppar3.move(300,150)
-        self.ppar4.move(300,200)
-        self.ppar5.move(300,250)
-        self.ppar6.move(300,300)
-        
-        self.ppar1.setMinimumWidth(300)
-        self.ppar2.setMinimumWidth(300)
-        self.ppar3.setMinimumWidth(300)
-        self.ppar4.setMinimumWidth(300)
-        self.ppar5.setMinimumWidth(300)
-        self.ppar6.setMinimumWidth(300)
-
-        self.btn2.setEnabled(False)
-        
-    def validate(self):
-        path = self.path.text()
-        mess,d = consistency_check(path)
-        self.validate_message = mess
-        if len(mess)!=0:
-            self.btn2.setEnabled(True)
-            self.ppar1.setValue(80)
-            mess_b = QMessageBox()
-            mess_b.setText("\n".join(mess))
-            mess_b.exec()
-    
-    def fix_error(self):
-        #fix_err(self.validate_message)
-        pass
-    def convert_to_json(self):
-        pass
-    def format(self):
-        pass
-    def to_json(self):
-        pass
-    def compress(self):
-        pass
-    def decompress(self):
-        pass
-
-class Window(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("XML Parser")
-        self.setWindowIcon(QIcon("icon.ico"))
-        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
-        self.setFixedSize(600, 400)
-        #self.load_layout = QHBoxLayout()
-        #self.main_layout.setSpacing(50)
-        self.xml_path = ""
-        self.path_qlbl = QLabel("")
-        self.btn1 = QPushButton("Load")
-        self.btn2 = QPushButton("Exit")
-        self.btn3 = QPushButton("Next")
-        self.path_label = QLineEdit("")
-        #self.path_label.setEnabled(False)
-        self.path_label.setReadOnly(True)
-        self.functions_window = Second_Win(path= self.path_qlbl)
 
 
-        self.btn1.clicked.connect(self.get_xml_path)
-        self.btn2.clicked.connect(sys.exit)
-        self.btn3.clicked.connect(self.functions_window.show)
-        self.btn1.setParent(self)
-        self.btn2.setParent(self)
-        self.btn3.setParent(self)
-        self.path_label.setParent(self)
-        self.btn1.move(500,100)
-        self.btn2.move(500,350)
-        self.btn3.move(400,350)
-        self.path_label.move(10,100)
-        self.path_label.setMinimumWidth(450)
-        #self.main_layout.addWidget(self.btn1)
-        #self.main_layout.addWidget(self.path_label)
+# first window frame startpage
+class StartPage(tk.Frame):
+    def __init__(self, parent, controller): #constructor of StartPage
+        # self.path = path
+        self.path = ""
+        self.controller = controller
+        #as it ihirit from tk.Frame
+        tk.Frame.__init__(self, parent)
+        main_frame = tk.Frame(self, bg="#9BBDF9")
+        main_frame.place(relwidth=1, relheight=1, relx=0, rely=0)
+        frame1 = tk.Frame(main_frame, bg="#B95F89")
+        frame1.place(relwidth=0.75, relheight=0.75, relx=0.125, rely=0.125)
+        screen1 = tk.Label(main_frame, text="Screen 0", fg="black", bg="#9BBDF9", font=("Times", 15))
+        screen1.place(relx=0.48, rely=0.025)
+        self.frame1 = frame1
 
-        #self.main_layout.addWidget(self.btn2)
-        #self.main_layout.addWidget(self.btn3)
+        # # image use "pip install Pillow" first please
+        # xml_image = Image.open("assets/xml_pic.png")
+        # xml_img_resized = xml_image.resize((650, 400), Image.ANTIALIAS)
+        # my_img = ImageTk.PhotoImage(xml_img_resized)
+        # my_label = tk.Label(app, image=my_img)
+        # my_label.place(relx=0.29, rely=0.30)
 
-        #self.setLayout(self.main_layout)
-    def get_xml_path(self):
-        self.xml_path = QFileDialog.getOpenFileName(self,"OpenFile")[0]
-        self.path_qlbl.setText(self.xml_path)
-        self.path_label.setText(self.xml_path.split("/")[-1])
-    
-if __name__=="__main__":
+        #=======================converting image into frame_text
+        s = """
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user>
+        <id>1</id>
+        <name>Ahmed Ali</name>
+        <posts>...
+        </posts>
+        <followers>...
+        </followers>
+    </user>
+    <user>
+        <id>2</id>
+        <name>Yasser Ahmed</name>
+        <posts>
+            <post>
+                <body>
+                    Lorem ipsum dolor sit amet
+                </body>
+                """
+        print(s)
+        frame2 = tk.Frame(main_frame, bg="#F0F0F0")
+        frame2.place(relx=0.35, rely=0.3, relwidth=0.3 ,relheight=0.5)
+        self.frame2 = frame2
+        #Text in the Frame
+        self.print_right_text(s)
+        #Text
+        label = tk.Label(frame1, text="Welcome To Our XML Parser\nPlease Choose The Input File", bg="#B95F89", fg="white", font=("Times", 25))
+        label.place(relx=0.33, rely=0.05)
 
-    myApp = QApplication(sys.argv)
-    window = Window()
-    window.show()
-    #window.resize(600,400)
-    #window.repaint()
-    
-    myApp.exec_()
-    sys.exit(0)
+        # button
+        browse = tk.Button(frame1, text="Choose xml/encoded File", font=(("Times", 15)), padx=10, pady=5, fg="white", bg="black", command=self.addApp, activebackground='#9BBDF9')
+        browse.place(relheight=0.07, relx=0.4, rely=0.92)
+
+       #path_widget
+        if self.path != "":
+            apps.insert(0, self.path)
+            path_widget = tk.Label(frame1, text=self.path)
+            path_widget.place( relx=0.62, rely=0.90)
+        # next button
+        next_btn = tk.Button(frame1, text="next", padx=5, pady=2.5, fg="white", bg="black", command=self.go_next, activebackground='#9BBDF9')
+        next_btn.place(relx=0.9, rely=0.95)
+
+    def addApp(self):
+        for widget in self.frame1.winfo_children():
+            if str(widget) == "path_widget":
+                widget.destroy
+        filename = filedialog.askopenfilename(initialdir="/", title="Select File", filetypes=(
+        ("XML File", "*.xml"), ("Encoded Text File", "*.text"),("select all", "*.*"))
+        )  # navigate from here "/" and type is xml or txt or anyfile
+        f = open(filename, 'r')
+        for e in f:
+            apps.append(e)
+            print(e)
+
+        # remove empty spaces
+        if len(filename) != 0:
+            self.path = filename
+
+        print(filename)
+        if self.path != "":
+            path_widget = tk.Label(self.frame1, text=self.path)
+            path_widget.place(relx=0.6, rely=0.90)
+
+    def go_next(self):
+        if (self.path != ""):
+            self.controller.show_frame(Page1)
+        else:
+            path_widget = tk.Label(self.frame1, text="Please Chose File First", fg="red")
+            path_widget.place(relx=0.6, rely=0.90)
+
+    def print_right_text(self, text):
+        s = text.split('\n')
+        # button1.pack(side=tkinter.LEFT)
+        flag = True
+        for string in s:
+            if flag == True:
+                flag = False
+                continue
+            text_widget = tk.Label(self.frame2, text=string, fg="black")
+            text_widget.pack(side="top", anchor="nw")
+
+    @staticmethod
+    def paths_returner(self):
+        return self.paths
+    @staticmethod
+    def path_returner(self):
+        return self.path
+#Screen 2
+class Page1(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        #instance of Start page share same static method
+        # s = StartPage(parent, controller).paths_returner()
+        # self.path = '/'
+        self.isXml = False
+        print("175")
+        main_frame = tk.Frame(self, bg="#9BBDF9")
+        main_frame.place(relwidth=1, relheight=1, relx=0, rely=0)
+        #screen 1 text
+        screen1 = tk.Label(main_frame, text="Screen 1", fg="black", bg="#9BBDF9", font=("Times", 15))
+        screen1.place(relx=0.48, rely=0.025)
+
+        #left frame
+        code_frame = tk.Frame(main_frame, bg="white")
+        code_frame.place(relx= 0.05, rely=0.05, relwidth=0.4, relheight=0.5)
+        #right frame
+        result_frame = tk.Frame(main_frame, bg="white")
+        result_frame.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.5)
+        #read lines from you code
+
+        # f = open(str(self.path), 'r')
+        # lines = f.read()
+        # print(lines)
+
+        # #xml file
+        if "<" in apps:
+            self.isXml = True
+            print("197")
+            for text in apps:
+                code_left = tk.Label(code_frame, text)
+        #encoded file
+        else:
+            self.isXml = False
+            print("203")
+            for text in apps:
+                code_left = tk.Label(code_frame, text)
+
+
+# Driver Code
+
+app = tkinterApp() #equivilent to => root = tk.Tk()
+
+#width and height of your labtop
+h = app.winfo_screenheight() # Returns screen height in pixels
+w = app.winfo_screenwidth() # Returns screen width in pixels
+#open at largest size
+app.state("zoomed")
+app.minsize(height= h, width= w)
+
+#title and icon
+app.title("XML Parser")
+app.iconbitmap(default=r"assets/xml-file.ico")
+
+
+#fonts
+font_header = tkFont.Font(family="Times", size=25)
+font_body = tkFont.Font(family="Times", size=15)
+font_footer = tkFont.Font(family="Times", size=15)
+
+
+
+
+# canvas = tk.Canvas(app, height=h, width=w, bg="#9BBDF9")
+# canvas.pack()
+
+# # image use "pip install Pillow" first please
+# xml_image = Image.open("assets/xml_pic.png")
+# # # xml_image.show()
+# xml_img_resized = xml_image.resize((650, 400), Image.ANTIALIAS)
+# my_img = ImageTk.PhotoImage(xml_img_resized)
+# my_label = tk.Label(app, image=my_img)
+# my_label.place(relx=0.29, rely=0.30)
+
+
+
+label02 = tk.Label(app, text="Made By The Parsers", bg="black", fg="white", font=("Times", 15))
+label02.place(relx=0.44, rely=0.92)
+
+
+
+
+app.mainloop()
