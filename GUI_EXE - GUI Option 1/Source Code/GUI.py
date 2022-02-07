@@ -1,7 +1,15 @@
 import tkinter as tk
 from tkinter import filedialog
 from XML import *
-import os
+#for ploting Graph
+# import networkx as nx
+from networkx import DiGraph, draw_networkx
+# import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure, show, style, grid
+
+# import seaborn as sns
+# sns.set()
+# import os
 import tkinter.font as tkFont
 # from tkinter import Text
 # from PIL import ImageTk, Image
@@ -28,7 +36,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1):
+        for F in (StartPage, Page1, Page2):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -54,6 +62,13 @@ class tkinterApp(tk.Tk):
     # passes text to the window Page1
     def pass_on_text2(self, text):
         self.frames[Page1].get_text(text)
+
+    def pass_on_msg(self, msg1, msg2):
+        self.frames[Page2].get_msg(msg1, msg2)
+
+    def pass_graph(self, flag):
+        self.frames[Page2].get_graph(flag)
+
 
     def destory_app(self):
         self.destroy()
@@ -240,6 +255,12 @@ class Page1(tk.Frame):
         self.convert_text = convert_text
         self.codec_text = ""
 
+        #Graph screen 2
+        next_btn = tk.Button(main_frame, text="Graph", state="disabled", font=(("Times", 15, 'bold')), padx=10, pady=5, fg="white", bg="black", command=self.go_next, activebackground='#9BBDF9')
+        next_btn.place(relx=0.68, rely=0.85, relwidth=0.07, relheight=0.05)
+        self.next_btn = next_btn
+
+
         #Save/Cancel
         self.txt = ""
         save = tk.Button(main_frame, text="Save", font=(("Times", 13, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.save, activebackground='#9BBDF9')
@@ -247,6 +268,8 @@ class Page1(tk.Frame):
 
         cancel = tk.Button(main_frame, text="Cancel", font=(("Times", 13, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.controller.destory_app,activebackground='#9BBDF9')
         cancel.place(relx=0.78, rely=0.85, relwidth=0.07, relheight=0.05)
+
+
 
     # get information and change the displayed text
     def get_text(self, text):
@@ -314,6 +337,10 @@ class Page1(tk.Frame):
             codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
             self.codec_text = codec_text
 
+    # send msg to Page2
+    def send_msg(self, msg1, msg2):
+        self.controller.pass_on_msg(msg1, msg2)
+
     def save(self):
         if (self.txt == ""):
             ff = open("1806171.txt", 'w')
@@ -355,6 +382,12 @@ class Page1(tk.Frame):
                 self.consestancey_text.destroy()
                 consestancey_text = tk.Label(self.main_frame, text="Consestancey", fg="green", bg="#9BBDF9", font=("Times", 15))
                 consestancey_text.place(relx=0.05, rely=0.7, relheight=0.04)
+            #to make data ready
+            self.next_btn.destroy()
+            next_btn = tk.Button(self.main_frame, text="Graph", font=(("Times", 15, 'bold')), padx=10, pady=5, fg="white", bg="black", command=self.go_next, activebackground='#9BBDF9')
+            next_btn.place(relx=0.68, rely=0.85, relwidth=0.07, relheight=0.05)
+            msg1, msg2 = self.XML_object.graph()
+            self.send_msg(msg1, msg2)
             self.isPressed_1 = True
 
     def formating(self):
@@ -468,7 +501,73 @@ class Page1(tk.Frame):
                 codec_text = tk.Label(self.main_frame, text=self.codec, fg="green", bg="#9BBDF9", font=("Times", 15))
                 codec_text.place(relx=0.05, rely=0.85, relheight=0.04)
             self.isPressed_4 = True
+    def go_next(self):
+        self.send_graph()
+        self.controller.show_frame(Page2)
+    def send_graph(self):
+        self.controller.pass_graph(True)
 
+#screen 3
+class Page2(tk.Frame):
+    # flag = False
+    def __init__(self, parent, controller):
+        self.controller = controller
+        self.flag = False
+        tk.Frame.__init__(self, parent)
+        #instance of Start page share same static method
+        main_frame = tk.Frame(self, bg="#9BBDF9")
+        main_frame.place(relwidth=1, relheight=1, relx=0, rely=0)
+        self.main_frame = main_frame
+        # screen 2 text
+        screen2 = tk.Label(self.main_frame, text="Screen 2", fg="black", bg="#9BBDF9", font=("Times", 15))
+        screen2.place(relx=0.48, rely=0.025)
+
+        # graph it
+        show_networking = tk.Button(self.main_frame, state='disabled', text="Show Graph!", font=(("Times", 15, 'bold')), padx=10, pady=5, fg="black", bg="white", command=self.graph_it, activebackground='#9BBDF9')
+        show_networking.place(relx=0.4, rely=0.4, relwidth=0.2, relheight=0.2)
+        self.graph_nodes = show_networking
+
+        #Buttons
+        btn_back = tk.Button(self.main_frame, text="Back", font=(("Times", 15, 'bold')), padx=10, pady=5, fg="black", bg="white", command=self.go_back, activebackground='#9BBDF9')
+        btn_back.place(relx=0.78, rely=0.85, relwidth=0.07, relheight=0.05)
+        cancel = tk.Button(self.main_frame, text="Close", font=(("Times", 15, 'bold')), padx=10, pady=5, bg="white", fg="black", command=self.controller.destory_app, activebackground='#9BBDF9')
+        cancel.place(relx=0.88, rely=0.85, relwidth=0.07, relheight=0.05)
+
+    def get_msg(self, msg1, msg2):
+        self.adj_matrix = msg1.astype(int)
+        self.marker_array = msg2
+        # print(self.adj_matrix)
+        # print(self.marker_array)
+        self.flag = True
+    def get_graph(self, flag):
+        self.flag = flag
+        self.graph_nodes.destroy()
+        show_networking = tk.Button(self.main_frame, text="Show Graph!", font=(("Times", 15, 'bold')), padx=10, pady=5, fg="black", bg="white", command=self.graph_it, activebackground='#9BBDF9')
+        show_networking.place(relx=0.4, rely=0.4, relwidth=0.2, relheight=0.2)
+
+    def go_back(self):
+        self.controller.show_frame(Page1)
+
+    def get_edges(self):
+        l = len(self.marker_array)
+        edges_as_tubles = []
+        for i in range(l):
+            for j in range(l):
+                if self.adj_matrix[i][j] == 1:
+                    edges_as_tubles.append((self.marker_array[i], self.marker_array[j]))
+        return edges_as_tubles
+    def graph_it(self):
+        if (self.flag == True):
+            # directed graph
+            G1 = DiGraph()
+            # [(0, 1), (1, 2), (0, 4), (2, 0)]]
+            edges = self.get_edges()
+            G1.add_edges_from(edges)
+            style.use("seaborn-dark")
+            figure()
+            grid()
+            draw_networkx(G1, edge_color= ['blue'])
+            show()
 
 # Driver Code
 app = tkinterApp() #equivilent to => root = tk.Tk()
@@ -482,8 +581,8 @@ app.minsize(height= h, width= w)
 
 #title and icon
 app.title("XML Parser")
-app.iconbitmap(default=r"assets/xml-file.ico")
-
+# app.iconbitmap(default=r"assets/xml-file.ico")
+app.iconbitmap("C:/3rd Electrical Computer AI/Data Structuers and Algorithms/final________project2/xmlF/assets/xml-file.ico")
 
 #fonts
 font_header = tkFont.Font(family="Times", size=25)
