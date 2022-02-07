@@ -1,5 +1,8 @@
 from XML_tree import Node
 from validate import *
+from graph import *
+# import numpy as np
+from numpy import zeros
 
 
 class XML:
@@ -11,11 +14,12 @@ class XML:
 
     def __init__(self, file_name=None):
         self.file_name = file_name
-        file = open(file_name, "r").read()
-        self.file_data = self.trim_spaces(file)
+        file = open(file_name, "r").read() #array of strings <users>
+        self.file_data = self.trim_spaces(file) #[<users>, <user>, <id>1</id>, ..]
             
     def validate_(self):
-        if self.file_name[-4:] == ".enc":   # File is encoded
+        err = ""
+        if self.file_name[-4:] == ".enc" or self.file_name[-4:] == ".txt":   # File is encoded
             with open(self.file_name, "r") as file:
                 self.file_data = file.read()
             self.validate_encoded()
@@ -23,6 +27,7 @@ class XML:
             elements, err = validate(self.file_name)
             self.elements = elements
             self.tags = self.get_tags()
+        return err
 
     def fix(self):
         self.format_xml()
@@ -128,8 +133,8 @@ class XML:
 
         result = head + body
 
-        with open(f"{self.file_name[0:-3]}enc", "w") as w:
-            w.write(result)
+        # with open(f"{self.file_name[0:-3]}enc", "w") as w:
+        #     w.write(result)
         return result
 
     # We just reverse what we did in encoding
@@ -165,8 +170,8 @@ class XML:
 
         self.file_data = decoded
         self.scrape_data()
-        with open(f"{self.file_name[0:-4]}_decoded.xml", "w") as w:
-            w.write(self.format_xml(False))
+        # with open(f"{self.file_name[0:-4]}_decoded.xml", "w") as w:
+        #     w.write(self.format_xml(False))
         return decoded
 
     def scrape_data(self):  # Used to extract elements array from file
@@ -208,7 +213,7 @@ class XML:
     def get_tags(self):
         result = []
         for element in self.elements:
-            if element[0] == "<" and element[1] != "/" and element not in result:
+            if element[0] == "<" and element[1] != "/" and element not in result: #<user> <user> X
                 result.append(element)
         result.reverse()
         return result
@@ -220,17 +225,17 @@ class XML:
         elements = self.elements
         
         for e in elements:
-            if e[0] == '<' and e[1] == '/':
+            if e[0] == '<' and e[1] == '/': #</closed>
                 lvl -= 1
                 result += (('\n' + ('\t' * lvl)) if result[-1] == '>' else '') + e
-            elif e[0] == '<':
+            elif e[0] == '<': #</opened>
                 result += ("\n" if lvl > 0 else "") + ('\t' * lvl) + e
                 lvl += 1
-            else:
+            else: #leaf(data)
                 result += e
-        if write_to_file:
-            with open(f"{self.file_name[0:-3]}formatted.xml",'w') as w:
-                w.write(result)
+        # if write_to_file:
+        #     with open(f"{self.file_name[0:-3]}formatted.xml",'w') as w:
+        #         w.write(result)
         return result
 
     # The main method that will start and end the conversion process
@@ -240,10 +245,41 @@ class XML:
         file_name = self.file_name
         json += self.node_to_json(root)
         json += "\n}"
-        with open(f"{file_name[0:-3]}json", "w") as w:
-            w.write(json)
+        # with open(f"{file_name[0:-3]}json", "w") as w:
+        #     w.write(json)
         return json
 
+    def graph(self): #big O[n^2]
+        '''
+        return Adj_Matrix, marker_array
+        '''
+        root = Node.create_xml_tree(self.elements) #tree made
+        num_nodes = len(root.children) #how many users/node
+        adj_matrix = zeros((num_nodes, num_nodes)) #make matrix
+        id, followers = find_followers_and_id(root) #id and followers
+        marker_array = []
+        my_list_followers = []
+        l = []
+        for e in id: #to get leaf nodes for each ID refrence
+            printer(e, l) #1
+            marker_array.extend(l)
+            # print(l)
+            l = []
+        # print(marker_array)  # [ 1 2 3 ]
+        for e in followers: #to get leaf nodes for each followers refrence
+            printer(e, l)
+            my_list_followers.append(l)
+            # print(l)
+            l = []
+        # print(my_list_followers)  # [ [2, 3] [1] [1] ]
+        # now put in adj matrix and map them
+        for i in range(len(id)):
+            # lets check if he is follower or not
+            for elemnto in my_list_followers[i]:
+                for j in range(len(marker_array)):
+                    if marker_array[j] == elemnto:
+                        adj_matrix[i][j] = 1
+        return adj_matrix, marker_array
     @staticmethod
     def int_or_str(data=""):    # Used for leaves to check if it's int or str so we add "" to str
         if data.isdigit():
